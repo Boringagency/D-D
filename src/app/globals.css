@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+:root {
+  --parchment: #f4e9d0;
+  --parchment-dark: #e8d5a3;
+  --leather: #8b5e3c;
+  --leather-dark: #6b4423;
+  --blood-red: #8b1a1a;
+  --blood-red-dark: #6b0f0f;
+  --dragon-gold: #c8a82c;
+  --dragon-gold-dark: #a08020;
+  --ink: #1a1a2e;
+  --stone: #4a4a5a;
+  --stone-light: #6a6a7a;
+}
+
+body {
+  background-color: #0d0d1a;
+  color: #e8e0d0;
+  font-family: system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--leather);
+  border-radius: 3px;
+}
+
+/* Pulse animation for low HP */
+@keyframes hpPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.low-hp {
+  animation: hpPulse 1.5s ease-in-out infinite;
+}
