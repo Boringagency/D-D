@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { Character } from '@/types/database'
+import { abilityModifier, formatModifier } from '@/lib/dnd'
 
 interface Props {
   character: Character
-  onShortRest: (hpGained: number) => Promise<void>
+  onShortRest: (hpGained: number, diceUsed: number) => Promise<void>
   onLongRest: () => Promise<void>
 }
 
@@ -54,7 +55,7 @@ export default function RestButtons({ character, onShortRest, onLongRest }: Prop
           onRest={async (hpGained, diceUsed) => {
             setLoading('short')
             setShowHitDice(false)
-            await onShortRest(hpGained)
+            await onShortRest(hpGained, diceUsed)
             setLoading(null)
           }}
         />
@@ -115,6 +116,7 @@ function HitDiceDialog({
 
   const diceMax = parseInt(character.hit_dice_type.slice(1)) || 8
   const available = character.hit_dice_current
+  const conMod = abilityModifier(character.constitution ?? 10)
 
   function rollDie() {
     return Math.floor(Math.random() * diceMax) + 1
@@ -122,7 +124,7 @@ function HitDiceDialog({
 
   function addDie() {
     if (diceUsed >= available) return
-    const roll = rollDie()
+    const roll = Math.max(0, rollDie() + conMod)
     setDiceUsed(prev => prev + 1)
     setRolledHp(prev => prev + roll)
     setRolling(true)
@@ -160,7 +162,7 @@ function HitDiceDialog({
               : 'bg-[#2a2a3a] text-[#5a5a7a] cursor-not-allowed'
           } ${rolling ? 'scale-105' : ''}`}
         >
-          🎲 Roll {character.hit_dice_type}
+          🎲 Roll {character.hit_dice_type}{conMod !== 0 ? ` ${formatModifier(conMod)}` : ''}
           {diceUsed < available ? ` (${available - diceUsed} left)` : ' (none left)'}
         </button>
 

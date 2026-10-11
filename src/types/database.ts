@@ -49,6 +49,15 @@ export interface Character {
   initiative: number
   speed: number
   proficiency_bonus: number
+  strength: number
+  dexterity: number
+  constitution: number
+  intelligence: number
+  wisdom: number
+  charisma: number
+  saving_throw_proficiencies: string[]
+  skill_proficiencies: string[]
+  skill_expertise: string[]
   death_save_successes: number
   death_save_failures: number
   hit_dice_total: number

@@ -23,6 +23,17 @@ create table if not exists public.characters (
   initiative integer not null default 0,
   speed integer not null default 30,
   proficiency_bonus integer not null default 2,
+  -- Ability scores
+  strength integer not null default 10 check (strength between 1 and 30),
+  dexterity integer not null default 10 check (dexterity between 1 and 30),
+  constitution integer not null default 10 check (constitution between 1 and 30),
+  intelligence integer not null default 10 check (intelligence between 1 and 30),
+  wisdom integer not null default 10 check (wisdom between 1 and 30),
+  charisma integer not null default 10 check (charisma between 1 and 30),
+  -- Proficiencies (ability keys / skill names)
+  saving_throw_proficiencies text[] not null default '{}',
+  skill_proficiencies text[] not null default '{}',
+  skill_expertise text[] not null default '{}',
   -- Death saves
   death_save_successes integer not null default 0 check (death_save_successes between 0 and 3),
   death_save_failures integer not null default 0 check (death_save_failures between 0 and 3),

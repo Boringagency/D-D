@@ -4,6 +4,19 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import {
+  ABILITIES,
+  SKILLS,
+  CLASS_SAVING_THROWS,
+  Ability,
+  abilityModifier,
+  formatModifier,
+  saveBonus,
+  skillBonus,
+  skillLevel,
+  cycleSkill,
+  toggleSave,
+} from '@/lib/dnd'
 
 const CLASSES = [
   'Artificer', 'Barbarian', 'Bard', 'Cleric', 'Druid',
@@ -127,6 +140,15 @@ export default function NewCharacterPage() {
     speed: 30,
     proficiency_bonus: 2,
     notes: '',
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10,
+    saving_throw_proficiencies: CLASS_SAVING_THROWS['Fighter'] as string[],
+    skill_proficiencies: [] as string[],
+    skill_expertise: [] as string[],
   })
 
   function update(field: string, value: string | number) {
@@ -137,6 +159,12 @@ export default function NewCharacterPage() {
       }
       if (field === 'level') {
         next.proficiency_bonus = PROFICIENCY_BONUS[(value as number) - 1]
+      }
+      if (field === 'dexterity') {
+        next.initiative = abilityModifier(value as number)
+      }
+      if (field === 'class') {
+        next.saving_throw_proficiencies = CLASS_SAVING_THROWS[value as string] ?? []
       }
       return next
     })
@@ -176,6 +204,15 @@ export default function NewCharacterPage() {
         hit_dice_current: level,
         hit_dice_type: hitDiceType,
         notes: form.notes,
+        strength: form.strength,
+        dexterity: form.dexterity,
+        constitution: form.constitution,
+        intelligence: form.intelligence,
+        wisdom: form.wisdom,
+        charisma: form.charisma,
+        saving_throw_proficiencies: form.saving_throw_proficiencies,
+        skill_proficiencies: form.skill_proficiencies,
+        skill_expertise: form.skill_expertise,
         death_save_successes: 0,
         death_save_failures: 0,
       })
@@ -308,6 +345,88 @@ export default function NewCharacterPage() {
                     {ALIGNMENTS.map(a => <option key={a}>{a}</option>)}
                   </select>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Ability Scores */}
+          <section className="bg-[#1a1a2e] border border-[#2a2a4a] rounded-2xl p-4">
+            <h2 className="font-bold text-[#c8a82c] mb-4 flex items-center gap-2">
+              <span>💪</span> Ability Scores
+            </h2>
+            <div className="grid grid-cols-3 gap-3">
+              {ABILITIES.map(a => (
+                <div key={a.key} className="bg-[#0d0d1a] rounded-xl p-2.5 text-center">
+                  <label className="block text-xs text-[#a09080] mb-1">{a.short}</label>
+                  <input
+                    type="number"
+                    min={1} max={30}
+                    value={form[a.key]}
+                    onChange={e => update(a.key, Math.max(1, Math.min(30, parseInt(e.target.value) || 1)))}
+                    className="w-full bg-[#1a1a2e] border border-[#3a3a5a] rounded-lg px-2 py-1.5 text-center text-sm text-[#e8e0d0] focus:outline-none focus:border-[#c8a82c]"
+                  />
+                  <div className="text-[#c8a82c] font-bold text-sm mt-1">
+                    {formatModifier(abilityModifier(form[a.key]))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4">
+              <div className="text-xs text-[#a09080] mb-2">Saving Throw Proficiencies</div>
+              <div className="flex flex-wrap gap-2">
+                {ABILITIES.map(a => {
+                  const active = form.saving_throw_proficiencies.includes(a.key)
+                  return (
+                    <button
+                      key={a.key}
+                      type="button"
+                      onClick={() => setForm(prev => ({
+                        ...prev,
+                        saving_throw_proficiencies: toggleSave(prev.saving_throw_proficiencies, a.key as Ability),
+                      }))}
+                      className={`text-xs rounded-lg px-2.5 py-1.5 border transition-colors ${
+                        active
+                          ? 'bg-[#c8a82c]/20 border-[#c8a82c] text-[#c8a82c]'
+                          : 'border-[#3a3a5a] text-[#7a7a9a]'
+                      }`}
+                    >
+                      {a.short} {formatModifier(saveBonus(form, a.key))}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="text-xs text-[#a09080] mb-2">
+                Skills <span className="text-[#5a5a7a]">(tap: none → proficient → expertise)</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                {SKILLS.map(sk => {
+                  const level = skillLevel(form, sk.name)
+                  return (
+                    <button
+                      key={sk.name}
+                      type="button"
+                      onClick={() => setForm(prev => ({ ...prev, ...cycleSkill(prev, sk.name) }))}
+                      className={`flex items-center justify-between text-xs rounded-lg px-2.5 py-1.5 border transition-colors ${
+                        level === 'expertise'
+                          ? 'bg-[#c8a82c]/30 border-[#c8a82c] text-[#e8e0d0]'
+                          : level === 'proficient'
+                            ? 'bg-[#c8a82c]/10 border-[#c8a82c]/60 text-[#e8e0d0]'
+                            : 'border-[#3a3a5a] text-[#7a7a9a]'
+                      }`}
+                    >
+                      <span>
+                        {sk.name}
+                        {level === 'expertise' && <span className="text-[#c8a82c]"> ★★</span>}
+                        {level === 'proficient' && <span className="text-[#c8a82c]"> ★</span>}
+                      </span>
+                      <span className="font-mono text-[#c8a82c]">{formatModifier(skillBonus(form, sk.name))}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           </section>

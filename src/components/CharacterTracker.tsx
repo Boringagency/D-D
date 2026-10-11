@@ -11,6 +11,7 @@ import InventorySection from './tracker/InventorySection'
 import CurrencySection from './tracker/CurrencySection'
 import ConditionsSection from './tracker/ConditionsSection'
 import RestButtons from './tracker/RestButtons'
+import AbilityScoresSection from './tracker/AbilityScoresSection'
 
 type Tab = 'combat' | 'spells' | 'inventory' | 'notes'
 
@@ -91,10 +92,13 @@ export default function CharacterTracker({
     await supabase.from('conditions').delete().eq('id', id)
   }
 
-  const handleShortRest = useCallback(async (hpGained: number) => {
+  const handleShortRest = useCallback(async (hpGained: number, diceUsed: number) => {
     const updates: Partial<Character> = {}
     if (hpGained > 0) {
       updates.current_hp = Math.min(character.max_hp, character.current_hp + hpGained)
+    }
+    if (diceUsed > 0) {
+      updates.hit_dice_current = Math.max(0, character.hit_dice_current - diceUsed)
     }
 
     // Recover warlock spell slots on short rest
@@ -247,6 +251,7 @@ export default function CharacterTracker({
               onShortRest={handleShortRest}
               onLongRest={handleLongRest}
             />
+            <AbilityScoresSection character={character} onUpdate={updateCharacter} />
             {/* Combat stats quick view */}
             <div className="bg-[#1a1a2e] border border-[#2a2a4a] rounded-2xl p-4">
               <h3 className="text-xs font-bold text-[#a09080] uppercase tracking-wider mb-3">Combat Stats</h3>
